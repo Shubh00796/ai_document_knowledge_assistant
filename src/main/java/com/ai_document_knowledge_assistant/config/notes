@@ -1,0 +1,11 @@
+#Chunking Algorithm
+1. Get the document text.
+2. If there is no text, return an empty list.
+3. Get chunk size and overlap configuration.
+4. Start at position 0.
+5. Take chunkSize characters.
+6. Save that chunk.
+7. Move backwards by overlap characters.
+8. Start the next chunk there.
+9. Repeat until the end of the document.
+10. Return all chunks.

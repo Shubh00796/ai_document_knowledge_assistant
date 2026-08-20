@@ -1,0 +1,17 @@
+﻿# Maven
+/target/
+**/target/
+# IntelliJ
+.idea/
+*.iml
+out/
+# OS
+.DS_Store
+Thumbs.db
+# Logs
+*.log
+# Env / secrets
+.env
+.env.*
+# Keep sample config only
+application-local.properties
