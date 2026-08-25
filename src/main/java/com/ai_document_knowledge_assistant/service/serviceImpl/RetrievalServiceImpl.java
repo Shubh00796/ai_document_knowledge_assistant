@@ -51,12 +51,14 @@ public class RetrievalServiceImpl implements RetrievalService {
      */
     @Override
     public List<VectorSearchResult> retrieve(
+            final String documentId,
             final String question,
             final int topK
     ) {
 
         validateQuestion(question);
         validateTopK(topK);
+        validateDocumentId(documentId);
 
         final long start = System.currentTimeMillis();
 
@@ -71,6 +73,7 @@ public class RetrievalServiceImpl implements RetrievalService {
          */
         final List<VectorSearchResult> semanticResults =
                 vectorStore.search(
+                        documentId,
                         queryEmbedding.vector(),
                         topK
                 );
@@ -162,6 +165,7 @@ public class RetrievalServiceImpl implements RetrievalService {
                 expanded.putIfAbsent(
                         key,
                         new VectorSearchResult(
+                                neighbor.documentId(),
                                 neighbor,
                                 0.0
                         )
@@ -408,5 +412,16 @@ public class RetrievalServiceImpl implements RetrievalService {
                                 )
                 )
                 .toList();
+    }
+
+    private void validateDocumentId(
+            final String documentId
+    ) {
+
+        if (documentId == null || documentId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Document ID cannot be blank"
+            );
+        }
     }
 }

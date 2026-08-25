@@ -12,11 +12,13 @@ public interface VectorStore {
     void save(VectorDocument document);
 
     List<VectorSearchResult> search(
+            String documentId,
             List<Float> queryVector,
             int topK
     );
 
     List<VectorDocument> findNeighbors(
+
             String documentId,
             int chunkIndex,
             int radius

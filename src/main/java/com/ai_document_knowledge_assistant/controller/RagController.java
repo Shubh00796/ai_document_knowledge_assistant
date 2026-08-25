@@ -22,8 +22,10 @@ public class RagController {
 
         RagResponse response =
                 ragService.answer(
+                        request.documentId(),
                         request.question()
-                );
+
+                        );
 
         return ResponseEntity.ok(response);
     }

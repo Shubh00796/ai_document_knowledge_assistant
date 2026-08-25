@@ -35,6 +35,7 @@ public class VectorSearchController {
                 embeddingService.embed(request.query());
 
         return vectorStore.search(
+                        request.documentId(),
                         queryEmbedding.vector(),
                         request.topK()
                 )

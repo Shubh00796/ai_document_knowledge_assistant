@@ -8,6 +8,7 @@ import java.util.List;
 public interface RetrievalService {
 
     List<VectorSearchResult> retrieve(
+            String documentId,
             String question,
             int topK
     );

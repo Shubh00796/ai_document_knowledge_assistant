@@ -27,16 +27,21 @@ public class InMemoryVectorStore implements VectorStore {
 
     @Override
     public List<VectorSearchResult> search(
+            String documentId,
             List<Float> queryVector,
             int topK
     ) {
         validateEmbedding(queryVector);
-
         validateTopK(topK);
 
         return documents.values()
                 .stream()
+                .filter(document ->
+                        documentId == null || documentId.isBlank()
+                                || document.documentId().equals(documentId)
+                )
                 .map(document -> new VectorSearchResult(
+                        document.documentId(),
                         document,
                         cosineSimilarity(
                                 queryVector,
