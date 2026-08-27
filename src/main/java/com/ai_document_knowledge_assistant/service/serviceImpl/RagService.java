@@ -37,10 +37,10 @@ public class RagService {
     /**
      * Answers a user question using retrieval + prompt building + LLM generation.
      */
-    public RagResponse answer(final String documentId, final String question) {
+    public RagResponse answer( final List<String> documentIds, final String question) {
 
         validateQuestion(question);
-        validateDocumentId(documentId);
+        validateDocumentIds(documentIds);
 
         final long totalStart =
                 System.currentTimeMillis();
@@ -53,7 +53,7 @@ public class RagService {
 
         final List<VectorSearchResult> results =
                 retrievalService.retrieve(
-                        documentId,
+                        documentIds,
                         question,
                         defaultTopK
                 );
@@ -244,11 +244,18 @@ public class RagService {
     /**
      * Validates that the document ID is not null or blank.
      */
-    private void validateDocumentId(
-            final String documentId
+    private void validateDocumentIds(
+            final List<String> documentIds
     ) {
 
-        if (documentId == null || documentId.isBlank()) {
+        if (documentIds == null || documentIds.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "At least one document ID is required"
+            );
+        }
+
+        if (documentIds.stream()
+                .anyMatch(id -> id == null || id.isBlank())) {
 
             throw new IllegalArgumentException(
                     "Document ID cannot be blank"

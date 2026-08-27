@@ -12,7 +12,7 @@ public interface VectorStore {
     void save(VectorDocument document);
 
     List<VectorSearchResult> search(
-            String documentId,
+            List<String> documentIds,
             List<Float> queryVector,
             int topK
     );

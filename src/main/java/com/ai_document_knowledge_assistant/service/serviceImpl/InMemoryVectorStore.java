@@ -27,7 +27,7 @@ public class InMemoryVectorStore implements VectorStore {
 
     @Override
     public List<VectorSearchResult> search(
-            String documentId,
+            List<String> documentIds,
             List<Float> queryVector,
             int topK
     ) {
@@ -37,8 +37,8 @@ public class InMemoryVectorStore implements VectorStore {
         return documents.values()
                 .stream()
                 .filter(document ->
-                        documentId == null || documentId.isBlank()
-                                || document.documentId().equals(documentId)
+                        documentIds != null && !documentIds.isEmpty()
+                                && documentIds.contains(document.documentId())
                 )
                 .map(document -> new VectorSearchResult(
                         document.documentId(),

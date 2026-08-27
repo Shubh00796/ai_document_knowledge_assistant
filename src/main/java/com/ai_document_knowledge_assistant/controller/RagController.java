@@ -22,10 +22,9 @@ public class RagController {
 
         RagResponse response =
                 ragService.answer(
-                        request.documentId(),
+                        request.documentIds(),
                         request.question()
-
-                        );
+                );
 
         return ResponseEntity.ok(response);
     }
