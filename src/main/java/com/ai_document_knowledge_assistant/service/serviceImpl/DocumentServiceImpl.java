@@ -7,7 +7,7 @@ import com.ai_document_knowledge_assistant.model.entity.DocumentChunkEntity;
 import com.ai_document_knowledge_assistant.model.entity.DocumentEntity;
 import com.ai_document_knowledge_assistant.parcer.DocumentParser;
 import com.ai_document_knowledge_assistant.parcer.DocumentParserFactory;
-import com.ai_document_knowledge_assistant.reposiotry.DocumentRepoService;
+import com.ai_document_knowledge_assistant.reposiotry_ai.DocumentRepoService;
 import com.ai_document_knowledge_assistant.service.ChunkingService;
 import com.ai_document_knowledge_assistant.service.DocumentService;
 import lombok.RequiredArgsConstructor;

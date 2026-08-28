@@ -7,6 +7,9 @@ import java.util.List;
 
 public record RagRequest(
 
+        @NotBlank(message = "Conversation ID cannot be blank")
+        String conversationId,
+
         @NotEmpty(message = "At least one document ID is required")
         List<@NotBlank(message = "Document ID cannot be blank") String> documentIds,
 

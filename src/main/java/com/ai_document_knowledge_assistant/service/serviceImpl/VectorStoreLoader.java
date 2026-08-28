@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ai_document_knowledge_assistant.model.VectorDocument;
 import com.ai_document_knowledge_assistant.model.entity.DocumentChunkEntity;
-import com.ai_document_knowledge_assistant.reposiotry.DocumentRepoService;
+import com.ai_document_knowledge_assistant.reposiotry_ai.DocumentRepoService;
 import com.ai_document_knowledge_assistant.service.VectorStore;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

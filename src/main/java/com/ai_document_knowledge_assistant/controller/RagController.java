@@ -1,5 +1,6 @@
 package com.ai_document_knowledge_assistant.controller;
 
+
 import com.ai_document_knowledge_assistant.dto.request.RagRequest;
 import com.ai_document_knowledge_assistant.dto.responce.RagResponse;
 import com.ai_document_knowledge_assistant.service.serviceImpl.RagService;
@@ -22,6 +23,7 @@ public class RagController {
 
         RagResponse response =
                 ragService.answer(
+                        request.conversationId(),
                         request.documentIds(),
                         request.question()
                 );

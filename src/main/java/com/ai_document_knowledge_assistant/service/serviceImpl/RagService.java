@@ -1,9 +1,12 @@
 package com.ai_document_knowledge_assistant.service.serviceImpl;
 
+import com.ai_document_knowledge_assistant.dto.request.MessageRequest;
+import com.ai_document_knowledge_assistant.dto.responce.ConversationMessageResponse;
 import com.ai_document_knowledge_assistant.dto.responce.RagResponse;
 import com.ai_document_knowledge_assistant.dto.responce.RagSource;
 import com.ai_document_knowledge_assistant.helper.RagPromptBuilder;
 import com.ai_document_knowledge_assistant.model.VectorSearchResult;
+import com.ai_document_knowledge_assistant.service.ConversationService;
 import com.ai_document_knowledge_assistant.service.RetrievalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,8 +16,23 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * Orchestrates the RAG flow:
- * retrieval → context → prompt → LLM response.
+ * Orchestrates the complete conversational RAG flow:
+ *
+ * validation
+ *      ↓
+ * conversation history
+ *      ↓
+ * semantic retrieval
+ *      ↓
+ * relevance gate
+ *      ↓
+ * context creation
+ *      ↓
+ * prompt construction
+ *      ↓
+ * LLM generation
+ *      ↓
+ * persist user + assistant messages
  */
 @Service
 @RequiredArgsConstructor
@@ -25,20 +43,27 @@ public class RagService {
             "No relevant information was found in the provided documents.";
 
     private static final String INSUFFICIENT_CONTEXT_MESSAGE =
-            "The provided documents do not contain enough information to answer this question.";
+            "The provided documents do not contain enough information " +
+                    "to answer this question.";
 
     private final RetrievalService retrievalService;
     private final RagPromptBuilder promptBuilder;
     private final OllamaChatService ollamaChatService;
+    private final ConversationService conversationService;
 
     @Value("${app.rag.retrieval.top-k:5}")
     private int defaultTopK;
 
     /**
-     * Answers a user question using retrieval + prompt building + LLM generation.
+     * Answers a question using conversational RAG.
      */
-    public RagResponse answer( final List<String> documentIds, final String question) {
+    public RagResponse answer(
+            final String conversationId,
+            final List<String> documentIds,
+            final String question
+    ) {
 
+        validateConversationId(conversationId);
         validateQuestion(question);
         validateDocumentIds(documentIds);
 
@@ -46,7 +71,26 @@ public class RagService {
                 System.currentTimeMillis();
 
         /*
-         * 1. Retrieve relevant document chunks.
+         * 1. Load previous conversation history.
+         */
+        final long historyStart =
+                System.currentTimeMillis();
+
+        final List<ConversationMessageResponse> history =
+                conversationService.getMessages(conversationId);
+
+        final long historyTime =
+                System.currentTimeMillis() - historyStart;
+
+        log.debug(
+                "Conversation history loaded - conversationId: {}, messages: {}, time: {} ms",
+                conversationId,
+                history.size(),
+                historyTime
+        );
+
+        /*
+         * 2. Retrieve relevant document chunks.
          */
         final long retrievalStart =
                 System.currentTimeMillis();
@@ -62,13 +106,17 @@ public class RagService {
                 System.currentTimeMillis() - retrievalStart;
 
         /*
-         * 2. If nothing was retrieved,
-         *    don't call the LLM.
+         * 3. Relevance gate.
+         *
+         * If semantic retrieval found nothing relevant,
+         * do NOT call the LLM.
          */
         if (results == null || results.isEmpty()) {
 
             log.info(
-                    "No relevant document chunks found for question: {}",
+                    "No relevant document chunks found. " +
+                            "Skipping LLM. conversationId={}, question={}",
+                    conversationId,
                     question
             );
 
@@ -79,7 +127,7 @@ public class RagService {
         }
 
         /*
-         * 3. Build document context.
+         * 4. Build document context.
          */
         final long contextStart =
                 System.currentTimeMillis();
@@ -91,13 +139,14 @@ public class RagService {
                 System.currentTimeMillis() - contextStart;
 
         /*
-         * 4. If retrieved chunks contain no usable text,
-         *    don't call the LLM.
+         * 5. Verify context contains usable content.
          */
         if (context.equals(NO_CONTEXT_MESSAGE)) {
 
             log.info(
-                    "Retrieved chunks contained no usable document content"
+                    "Retrieved chunks contained no usable document content. " +
+                            "conversationId={}",
+                    conversationId
             );
 
             return new RagResponse(
@@ -107,13 +156,14 @@ public class RagService {
         }
 
         /*
-         * 5. Build RAG prompt.
+         * 6. Build conversational RAG prompt.
          */
         final long promptStart =
                 System.currentTimeMillis();
 
         final String prompt =
                 promptBuilder.build(
+                        history,
                         question,
                         context
                 );
@@ -132,7 +182,7 @@ public class RagService {
         );
 
         /*
-         * 6. Send prompt to Ollama.
+         * 7. Call LLM.
          */
         final long llmStart =
                 System.currentTimeMillis();
@@ -144,14 +194,31 @@ public class RagService {
                 System.currentTimeMillis() - llmStart;
 
         /*
-         * 7. Total RAG timing.
+         * 8. Persist user message.
+         */
+        conversationService.addUserMessage(
+                conversationId,
+                new MessageRequest(question)
+        );
+
+        /*
+         * 9. Persist assistant message.
+         */
+        conversationService.addAssistantMessage(
+                conversationId,
+                new MessageRequest(answer)
+        );
+
+        /*
+         * 10. Total timing.
          */
         final long totalTime =
                 System.currentTimeMillis() - totalStart;
 
         log.info(
-                "RAG timing -> retrieval: {} ms, context: {} ms, " +
-                        "prompt: {} ms, llm: {} ms, total: {} ms",
+                "RAG timing -> history: {} ms, retrieval: {} ms, " +
+                        "context: {} ms, prompt: {} ms, llm: {} ms, total: {} ms",
+                historyTime,
                 retrievalTime,
                 contextTime,
                 promptTime,
@@ -166,7 +233,7 @@ public class RagService {
     }
 
     /**
-     * Builds a plain text context block from retrieved chunks.
+     * Builds document context from retrieved chunks.
      */
     private String buildContext(
             final List<VectorSearchResult> results
@@ -191,16 +258,14 @@ public class RagService {
 
             hasValidContext = true;
 
-            context.append("[Chunk ")
-                    .append(
-                            result.document()
-                                    .chunkIndex()
-                    )
+            context.append("[Document ")
+                    .append(result.document().documentId())
+                    .append(" | Chunk ")
+                    .append(result.document().chunkIndex())
                     .append("]\n");
 
             context.append(
-                    result.document()
-                            .content()
+                    result.document().content()
             );
 
             context.append("\n\n");
@@ -214,7 +279,7 @@ public class RagService {
     }
 
     /**
-     * Checks whether a retrieved chunk has usable text content.
+     * Checks whether retrieved document content is usable.
      */
     private static boolean validateDocumentContent(
             final VectorSearchResult result
@@ -227,13 +292,30 @@ public class RagService {
     }
 
     /**
-     * Validates that the question is not null or blank.
+     * Validates conversation ID.
+     */
+    private void validateConversationId(
+            final String conversationId
+    ) {
+
+        if (conversationId == null ||
+                conversationId.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Conversation ID cannot be blank"
+            );
+        }
+    }
+
+    /**
+     * Validates question.
      */
     private void validateQuestion(
             final String question
     ) {
 
-        if (question == null || question.isBlank()) {
+        if (question == null ||
+                question.isBlank()) {
 
             throw new IllegalArgumentException(
                     "Question cannot be blank"
@@ -242,13 +324,15 @@ public class RagService {
     }
 
     /**
-     * Validates that the document ID is not null or blank.
+     * Validates document IDs.
      */
     private void validateDocumentIds(
             final List<String> documentIds
     ) {
 
-        if (documentIds == null || documentIds.isEmpty()) {
+        if (documentIds == null ||
+                documentIds.isEmpty()) {
+
             throw new IllegalArgumentException(
                     "At least one document ID is required"
             );
@@ -264,7 +348,7 @@ public class RagService {
     }
 
     /**
-     * Maps valid retrieved chunks to lightweight source metadata.
+     * Maps retrieved chunks to source metadata.ConversationServiceImpl
      */
     private List<RagSource> buildSources(
             final List<VectorSearchResult> results

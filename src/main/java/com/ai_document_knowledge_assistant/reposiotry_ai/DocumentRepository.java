@@ -1,4 +1,4 @@
-package com.ai_document_knowledge_assistant.reposiotry;
+package com.ai_document_knowledge_assistant.reposiotry_ai;
 
 
 

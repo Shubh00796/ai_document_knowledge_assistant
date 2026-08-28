@@ -1,4 +1,4 @@
-package com.ai_document_knowledge_assistant.reposiotry;
+package com.ai_document_knowledge_assistant.reposiotry_ai;
 
 import com.ai_document_knowledge_assistant.model.entity.DocumentChunkEntity;
 import org.springframework.data.jpa.repository.JpaRepository;

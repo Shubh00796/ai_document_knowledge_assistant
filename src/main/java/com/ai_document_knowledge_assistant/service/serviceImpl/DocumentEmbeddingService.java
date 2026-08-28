@@ -7,7 +7,7 @@ import com.ai_document_knowledge_assistant.model.DocumentChunk;
 import com.ai_document_knowledge_assistant.model.Embedding;
 import com.ai_document_knowledge_assistant.model.VectorDocument;
 import com.ai_document_knowledge_assistant.model.entity.DocumentChunkEntity;
-import com.ai_document_knowledge_assistant.reposiotry.DocumentRepoService;
+import com.ai_document_knowledge_assistant.reposiotry_ai.DocumentRepoService;
 import com.ai_document_knowledge_assistant.service.EmbeddingService;
 import com.ai_document_knowledge_assistant.service.VectorStore;
 import lombok.RequiredArgsConstructor;
