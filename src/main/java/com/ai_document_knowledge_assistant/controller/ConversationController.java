@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Handles conversation endpoints.
+ */
 @RestController
 @RequestMapping("/api/conversations")
 @RequiredArgsConstructor

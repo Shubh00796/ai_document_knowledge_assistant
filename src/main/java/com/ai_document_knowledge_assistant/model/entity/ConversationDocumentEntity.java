@@ -6,6 +6,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Links a conversation to a document.
+ */
 @Entity
 @Table(
         name = "conversation_documents",

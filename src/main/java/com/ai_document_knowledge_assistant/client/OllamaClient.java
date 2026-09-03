@@ -8,6 +8,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+/**
+ * Calls the Ollama API.
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j

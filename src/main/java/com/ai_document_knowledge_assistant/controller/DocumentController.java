@@ -12,6 +12,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
+/**
+ * Handles document upload endpoints.
+ */
 @RestController
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor

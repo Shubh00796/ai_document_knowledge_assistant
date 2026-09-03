@@ -1,13 +1,15 @@
 package com.ai_document_knowledge_assistant.model.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Stored document chunk.
+ */
 @Entity
 @Table(
         name = "document_chunks",

@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Handles vector search endpoints.
+ */
 @RestController
 @RequestMapping("/api/vector-search")
 public class VectorSearchController {

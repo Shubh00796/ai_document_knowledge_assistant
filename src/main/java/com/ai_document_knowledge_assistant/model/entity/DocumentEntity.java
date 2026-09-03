@@ -1,13 +1,15 @@
 package com.ai_document_knowledge_assistant.model.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/**
+ * Uploaded document metadata.
+ */
 @Entity
 @Table(
         name = "documents",
@@ -35,7 +37,6 @@ public class DocumentEntity {
 
     /**
      * Application-level document identifier.
-     *
      * This is the ID used by:
      * - document_chunks.document_id
      * - VectorDocument.documentId
@@ -67,7 +68,6 @@ public class DocumentEntity {
 
     /**
      * SHA-256 hash of the original uploaded file.
-     *
      * Used to detect whether this exact file
      * has already been processed.
      */

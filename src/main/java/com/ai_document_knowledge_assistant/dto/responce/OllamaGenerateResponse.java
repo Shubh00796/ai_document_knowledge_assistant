@@ -2,6 +2,9 @@ package com.ai_document_knowledge_assistant.dto.responce;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Ollama generation response.
+ */
 public record OllamaGenerateResponse(
         String response,
         boolean done,

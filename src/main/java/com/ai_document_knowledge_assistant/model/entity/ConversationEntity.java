@@ -6,6 +6,9 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
+/**
+ * Conversation record.
+ */
 @Entity
 @Table(
         name = "conversations",

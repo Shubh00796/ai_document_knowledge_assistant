@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Handles RAG question endpoints.
+ */
 @RestController
 @RequestMapping("/api/rag")
 @RequiredArgsConstructor
@@ -24,7 +27,6 @@ public class RagController {
         RagResponse response =
                 ragService.answer(
                         request.conversationId(),
-                        request.documentIds(),
                         request.question()
                 );
 

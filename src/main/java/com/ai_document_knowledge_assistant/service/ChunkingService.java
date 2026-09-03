@@ -7,7 +7,11 @@ import com.ai_document_knowledge_assistant.model.ParsedDocument;
 
 import java.util.List;
 
+/**
+ * Splits parsed documents into chunks.
+ */
 public interface ChunkingService {
 
+    /** Chunks a parsed document. */
     List<DocumentChunk> chunk(ParsedDocument document);
 }

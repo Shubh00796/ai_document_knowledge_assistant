@@ -1,11 +1,15 @@
 package com.ai_document_knowledge_assistant.service.serviceImpl;
 
 import com.ai_document_knowledge_assistant.dto.request.MessageRequest;
+import com.ai_document_knowledge_assistant.dto.responce.ConversationDocumentResponse;
 import com.ai_document_knowledge_assistant.dto.responce.ConversationMessageResponse;
 import com.ai_document_knowledge_assistant.dto.responce.RagResponse;
 import com.ai_document_knowledge_assistant.dto.responce.RagSource;
 import com.ai_document_knowledge_assistant.helper.RagPromptBuilder;
 import com.ai_document_knowledge_assistant.model.VectorSearchResult;
+import com.ai_document_knowledge_assistant.model.entity.ConversationDocumentEntity;
+import com.ai_document_knowledge_assistant.reposiotry_ai.ConversationDocumentRepository;
+import com.ai_document_knowledge_assistant.service.ConversationDocumentService;
 import com.ai_document_knowledge_assistant.service.ConversationService;
 import com.ai_document_knowledge_assistant.service.RetrievalService;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +25,8 @@ import java.util.List;
  * validation
  *      ↓
  * conversation history
+ *      ↓
+ * attached conversation documents
  *      ↓
  * semantic retrieval
  *      ↓
@@ -50,6 +56,8 @@ public class RagService {
     private final RagPromptBuilder promptBuilder;
     private final OllamaChatService ollamaChatService;
     private final ConversationService conversationService;
+    private final ConversationDocumentRepository conversationDocumentRepository;
+   private final  ConversationDocumentService conversationDocumentService;
 
     @Value("${app.rag.retrieval.top-k:5}")
     private int defaultTopK;
@@ -59,19 +67,29 @@ public class RagService {
      */
     public RagResponse answer(
             final String conversationId,
-            final List<String> documentIds,
             final String question
     ) {
 
         validateConversationId(conversationId);
         validateQuestion(question);
+
+        /*
+         * 1. Find documents attached to this conversation.
+         */
+        final List<String> documentIds =
+                conversationDocumentService
+                        .getDocuments(conversationId)
+                        .stream()
+                        .map(ConversationDocumentResponse::documentId)
+                        .toList();
+
         validateDocumentIds(documentIds);
 
         final long totalStart =
                 System.currentTimeMillis();
 
         /*
-         * 1. Load previous conversation history.
+         * 2. Load previous conversation history.
          */
         final long historyStart =
                 System.currentTimeMillis();
@@ -90,7 +108,7 @@ public class RagService {
         );
 
         /*
-         * 2. Retrieve relevant document chunks.
+         * 3. Retrieve relevant document chunks.
          */
         final long retrievalStart =
                 System.currentTimeMillis();
@@ -106,7 +124,7 @@ public class RagService {
                 System.currentTimeMillis() - retrievalStart;
 
         /*
-         * 3. Relevance gate.
+         * 4. Relevance gate.
          *
          * If semantic retrieval found nothing relevant,
          * do NOT call the LLM.
@@ -127,7 +145,7 @@ public class RagService {
         }
 
         /*
-         * 4. Build document context.
+         * 5. Build document context.
          */
         final long contextStart =
                 System.currentTimeMillis();
@@ -139,7 +157,7 @@ public class RagService {
                 System.currentTimeMillis() - contextStart;
 
         /*
-         * 5. Verify context contains usable content.
+         * 6. Verify context contains usable content.
          */
         if (context.equals(NO_CONTEXT_MESSAGE)) {
 
@@ -156,7 +174,7 @@ public class RagService {
         }
 
         /*
-         * 6. Build conversational RAG prompt.
+         * 7. Build conversational RAG prompt.
          */
         final long promptStart =
                 System.currentTimeMillis();
@@ -182,7 +200,7 @@ public class RagService {
         );
 
         /*
-         * 7. Call LLM.
+         * 8. Call LLM.
          */
         final long llmStart =
                 System.currentTimeMillis();
@@ -194,7 +212,7 @@ public class RagService {
                 System.currentTimeMillis() - llmStart;
 
         /*
-         * 8. Persist user message.
+         * 9. Persist user message.
          */
         conversationService.addUserMessage(
                 conversationId,
@@ -202,7 +220,7 @@ public class RagService {
         );
 
         /*
-         * 9. Persist assistant message.
+         * 10. Persist assistant message.
          */
         conversationService.addAssistantMessage(
                 conversationId,
@@ -210,7 +228,7 @@ public class RagService {
         );
 
         /*
-         * 10. Total timing.
+         * 11. Total timing.
          */
         final long totalTime =
                 System.currentTimeMillis() - totalStart;
@@ -334,7 +352,7 @@ public class RagService {
                 documentIds.isEmpty()) {
 
             throw new IllegalArgumentException(
-                    "At least one document ID is required"
+                    "At least one document must be attached to the conversation"
             );
         }
 
@@ -348,7 +366,7 @@ public class RagService {
     }
 
     /**
-     * Maps retrieved chunks to source metadata.ConversationServiceImpl
+     * Maps retrieved chunks to source metadata.
      */
     private List<RagSource> buildSources(
             final List<VectorSearchResult> results
