@@ -116,6 +116,8 @@ public class RagPromptBuilder {
         );
     }
 
+
+
     /** Converts conversation messages into prompt text. */
     private String buildConversationHistory(
             final List<ConversationMessageResponse> history

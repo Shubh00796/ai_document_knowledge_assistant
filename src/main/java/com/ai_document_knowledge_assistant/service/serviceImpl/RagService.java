@@ -153,6 +153,15 @@ public class RagService {
         final String context =
                 buildContext(results);
 
+        log.debug(
+                """
+                ========== RAG CONTEXT ==========
+                {}
+                =================================
+                """,
+                context
+        );
+
         final long contextTime =
                 System.currentTimeMillis() - contextStart;
 
@@ -205,6 +214,9 @@ public class RagService {
         final long llmStart =
                 System.currentTimeMillis();
 
+        log.info("========== RAG PROMPT START ==========");
+        log.info(prompt);
+        log.info("========== RAG PROMPT END ==========");
         final String answer =
                 ollamaChatService.generate(prompt);
 
@@ -269,6 +281,13 @@ public class RagService {
         context.append("DOCUMENT CONTEXT\n\n");
 
         for (VectorSearchResult result : results) {
+            log.info(
+                    "Retrieved chunk -> documentId={}, chunkIndex={}, similarity={}, content={}",
+                    result.document().documentId(),
+                    result.document().chunkIndex(),
+                    result.similarity(),
+                    result.document().content()
+            );
 
             if (validateDocumentContent(result)) {
                 continue;
